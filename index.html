@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin — Product Manager</title>
+<title>ProductAdmin — Live Sync</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -17,553 +17,347 @@
     --muted: #6b6b88;
     --danger: #ff4444;
     --success: #44ffaa;
+    --firebase: #ff9800;
     --radius: 12px;
   }
-
   * { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    font-family: 'DM Mono', monospace;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
-
-  /* Background grid */
+  body { font-family: 'DM Mono', monospace; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
   body::before {
     content: '';
-    position: fixed;
-    inset: 0;
-    background-image:
-      linear-gradient(rgba(232,255,71,0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(232,255,71,0.03) 1px, transparent 1px);
+    position: fixed; inset: 0;
+    background-image: linear-gradient(rgba(232,255,71,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(232,255,71,0.025) 1px, transparent 1px);
     background-size: 40px 40px;
-    pointer-events: none;
-    z-index: 0;
+    pointer-events: none; z-index: 0;
   }
 
-  /* Header */
-  header {
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    background: rgba(10,10,15,0.85);
-    backdrop-filter: blur(20px);
-    border-bottom: 1px solid var(--border);
-    padding: 0 40px;
-    height: 72px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+  /* ── Setup Screen ── */
+  #setup-screen {
+    display: none !important;
   }
-
-  .logo {
-    font-family: 'Syne', sans-serif;
-    font-weight: 800;
-    font-size: 20px;
-    letter-spacing: -0.5px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .logo-dot {
-    width: 10px; height: 10px;
-    background: var(--accent);
-    border-radius: 50%;
-    box-shadow: 0 0 12px var(--accent);
-    animation: pulse 2s ease-in-out infinite;
-  }
-
-  @keyframes pulse {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.6; transform: scale(0.8); }
-  }
-
-  .header-actions { display: flex; gap: 12px; align-items: center; }
-
-  /* Buttons */
-  .btn {
-    font-family: 'DM Mono', monospace;
-    font-size: 12px;
-    font-weight: 500;
-    letter-spacing: 0.5px;
-    padding: 10px 20px;
-    border-radius: var(--radius);
-    border: none;
-    cursor: pointer;
-    transition: all 0.2s;
-    text-transform: uppercase;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .btn-primary {
-    background: var(--accent);
-    color: #0a0a0f;
-    font-weight: 700;
-  }
-  .btn-primary:hover { background: #d4eb30; transform: translateY(-1px); box-shadow: 0 4px 20px rgba(232,255,71,0.3); }
-
-  .btn-ghost {
-    background: var(--surface2);
-    color: var(--text);
-    border: 1px solid var(--border);
-  }
-  .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
-
-  .btn-danger { background: rgba(255,68,68,0.15); color: var(--danger); border: 1px solid rgba(255,68,68,0.3); }
-  .btn-danger:hover { background: rgba(255,68,68,0.25); }
-
-  .btn-success { background: rgba(68,255,170,0.15); color: var(--success); border: 1px solid rgba(68,255,170,0.3); }
-  .btn-success:hover { background: rgba(68,255,170,0.25); }
-
-  .btn-sm { padding: 6px 14px; font-size: 11px; }
-
-  /* Layout */
-  .container { max-width: 1400px; margin: 0 auto; padding: 40px; position: relative; z-index: 1; }
-
-  /* Stats bar */
-  .stats-bar {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 16px;
-    margin-bottom: 40px;
-  }
-
-  .stat-card {
+  .setup-card {
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 24px;
+    border-radius: 24px;
+    padding: 52px 48px;
+    max-width: 580px; width: 100%;
     position: relative;
     overflow: hidden;
-    transition: border-color 0.2s;
+  }
+  .setup-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--firebase), var(--accent));
+  }
+  .setup-logo {
+    font-family: 'Syne', sans-serif; font-weight: 800; font-size: 28px;
+    margin-bottom: 6px; display: flex; align-items: center; gap: 12px;
+  }
+  .fire-icon { font-size: 32px; }
+  .setup-sub { color: var(--muted); font-size: 13px; margin-bottom: 40px; line-height: 1.7; }
+  .setup-steps { margin-bottom: 32px; }
+  .step {
+    display: flex; gap: 16px; margin-bottom: 16px; align-items: flex-start;
+  }
+  .step-num {
+    min-width: 28px; height: 28px;
+    border-radius: 50%;
+    background: rgba(232,255,71,0.12);
+    border: 1px solid rgba(232,255,71,0.3);
+    color: var(--accent);
+    font-size: 12px; font-weight: 600;
+    display: flex; align-items: center; justify-content: center;
+    margin-top: 2px;
+  }
+  .step-text { font-size: 13px; color: var(--muted); line-height: 1.7; }
+  .step-text strong { color: var(--text); }
+  .step-text a { color: var(--accent); text-decoration: none; }
+  .step-text a:hover { text-decoration: underline; }
+  .setup-input-wrap { margin-bottom: 12px; }
+  .setup-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 8px; display: block; }
+  .setup-input {
+    width: 100%;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 16px 18px;
+    font-family: 'DM Mono', monospace; font-size: 13px; color: var(--text);
+    outline: none; transition: border-color 0.2s;
+  }
+  .setup-input:focus { border-color: var(--firebase); }
+  .setup-input::placeholder { color: var(--muted); }
+  .setup-hint { font-size: 11px; color: var(--muted); margin-bottom: 28px; }
+  .setup-hint code { background: var(--surface2); padding: 2px 6px; border-radius: 4px; color: var(--firebase); }
+  .btn-connect {
+    width: 100%;
+    background: linear-gradient(135deg, var(--firebase), #ffb74d);
+    color: #0a0a0f; font-family: 'Syne', sans-serif;
+    font-weight: 800; font-size: 15px; letter-spacing: 0.5px;
+    padding: 18px; border: none; border-radius: 12px;
+    cursor: pointer; transition: all 0.2s;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+  }
+  .btn-connect:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(255,152,0,0.35); }
+  .setup-error { color: var(--danger); font-size: 12px; margin-top: 10px; display: none; }
+
+  /* ── Header ── */
+  header {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(10,10,15,0.88); backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 40px; height: 72px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 20px; letter-spacing: -0.5px; display: flex; align-items: center; gap: 10px; }
+  .sync-badge {
+    display: flex; align-items: center; gap: 7px;
+    font-size: 11px; color: var(--muted);
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 100px; padding: 5px 12px;
+    transition: all 0.3s;
+  }
+  .sync-badge.live { border-color: rgba(68,255,170,0.4); color: var(--success); }
+  .sync-badge.live .sync-dot { background: var(--success); box-shadow: 0 0 8px var(--success); }
+  .sync-badge.error { border-color: rgba(255,68,68,0.4); color: var(--danger); }
+  .sync-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); transition: all 0.3s; }
+  @keyframes syncPulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.7)} }
+  .sync-badge.live .sync-dot { animation: syncPulse 1.8s ease-in-out infinite; }
+  .header-right { display: flex; gap: 12px; align-items: center; }
+
+  /* ── Buttons ── */
+  .btn {
+    font-family: 'DM Mono', monospace; font-size: 12px; font-weight: 500;
+    letter-spacing: 0.5px; padding: 10px 20px;
+    border-radius: var(--radius); border: none; cursor: pointer;
+    transition: all 0.2s; text-transform: uppercase;
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  .btn-primary { background: var(--accent); color: #0a0a0f; font-weight: 700; }
+  .btn-primary:hover { background: #d4eb30; transform: translateY(-1px); box-shadow: 0 4px 20px rgba(232,255,71,0.3); }
+  .btn-ghost { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+  .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-danger { background: rgba(255,68,68,0.12); color: var(--danger); border: 1px solid rgba(255,68,68,0.3); }
+  .btn-danger:hover { background: rgba(255,68,68,0.22); }
+  .btn-sm { padding: 6px 14px; font-size: 11px; }
+
+  /* ── Layout ── */
+  .container { max-width: 1400px; margin: 0 auto; padding: 40px; position: relative; z-index: 1; }
+
+  /* ── Stats ── */
+  .stats-bar { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-bottom: 40px; }
+  .stat-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 24px;
+    position: relative; overflow: hidden; transition: border-color 0.2s;
   }
   .stat-card:hover { border-color: var(--accent); }
-  .stat-card::after {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 2px;
-    background: linear-gradient(90deg, var(--accent), transparent);
-  }
-
+  .stat-card::after { content:''; position:absolute; top:0;left:0;right:0; height:2px; background:linear-gradient(90deg,var(--accent),transparent); }
   .stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
   .stat-value { font-family: 'Syne', sans-serif; font-size: 32px; font-weight: 800; line-height: 1; }
   .stat-sub { font-size: 11px; color: var(--muted); margin-top: 6px; }
 
-  /* Toolbar */
-  .toolbar {
-    display: flex;
-    gap: 12px;
-    align-items: center;
-    margin-bottom: 24px;
-    flex-wrap: wrap;
-  }
-
-  .search-wrap {
-    flex: 1;
-    min-width: 240px;
-    position: relative;
-  }
-
+  /* ── Toolbar ── */
+  .toolbar { display: flex; gap: 12px; align-items: center; margin-bottom: 24px; flex-wrap: wrap; }
+  .search-wrap { flex: 1; min-width: 240px; position: relative; }
   .search-wrap input {
-    width: 100%;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 12px 16px 12px 44px;
-    font-family: 'DM Mono', monospace;
-    font-size: 13px;
-    color: var(--text);
-    outline: none;
-    transition: border-color 0.2s;
+    width: 100%; background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 12px 16px 12px 44px;
+    font-family: 'DM Mono', monospace; font-size: 13px; color: var(--text);
+    outline: none; transition: border-color 0.2s;
   }
   .search-wrap input:focus { border-color: var(--accent); }
   .search-wrap input::placeholder { color: var(--muted); }
-
-  .search-icon {
-    position: absolute;
-    left: 16px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--muted);
-    font-size: 16px;
-  }
-
+  .search-icon { position:absolute; left:16px; top:50%; transform:translateY(-50%); color:var(--muted); font-size:16px; }
   select.filter-select {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 12px 16px;
-    font-family: 'DM Mono', monospace;
-    font-size: 12px;
-    color: var(--text);
-    outline: none;
-    cursor: pointer;
-    transition: border-color 0.2s;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 12px 16px;
+    font-family: 'DM Mono', monospace; font-size: 12px; color: var(--text);
+    outline: none; cursor: pointer; transition: border-color 0.2s;
   }
   select.filter-select:focus { border-color: var(--accent); }
 
-  /* Products grid */
-  .products-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 20px;
-    margin-bottom: 40px;
-  }
-
+  /* ── Products Grid ── */
+  .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px,1fr)); gap: 20px; margin-bottom: 40px; }
   .product-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 24px;
-    position: relative;
-    transition: all 0.25s;
-    animation: fadeIn 0.3s ease;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 24px;
+    transition: all 0.25s; animation: fadeIn 0.3s ease;
   }
-
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(12px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  .product-card:hover {
-    border-color: var(--accent);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 32px rgba(232,255,71,0.08);
-  }
-
-  .product-card-header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    margin-bottom: 16px;
-  }
-
-  .product-id {
-    font-size: 10px;
-    color: var(--accent);
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    margin-bottom: 6px;
-  }
-
-  .product-name {
-    font-family: 'Syne', sans-serif;
-    font-size: 18px;
-    font-weight: 700;
-    line-height: 1.2;
-    max-width: 200px;
-  }
-
-  .product-actions { display: flex; gap: 8px; }
-
+  @keyframes fadeIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+  .product-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 8px 32px rgba(232,255,71,0.08); }
+  .product-card-header { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:16px; }
+  .product-id { font-size:10px; color:var(--accent); letter-spacing:1px; text-transform:uppercase; margin-bottom:6px; }
+  .product-name { font-family:'Syne',sans-serif; font-size:18px; font-weight:700; line-height:1.2; max-width:200px; }
+  .product-actions { display:flex; gap:8px; }
   .icon-btn {
-    width: 32px; height: 32px;
-    border-radius: 8px;
-    border: 1px solid var(--border);
-    background: var(--surface2);
-    color: var(--muted);
-    cursor: pointer;
-    font-size: 14px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s;
+    width:32px; height:32px; border-radius:8px; border:1px solid var(--border);
+    background:var(--surface2); color:var(--muted); cursor:pointer; font-size:14px;
+    display:flex; align-items:center; justify-content:center; transition:all 0.2s;
   }
-  .icon-btn:hover.edit { border-color: var(--accent); color: var(--accent); background: rgba(232,255,71,0.1); }
-  .icon-btn:hover.delete { border-color: var(--danger); color: var(--danger); background: rgba(255,68,68,0.1); }
-
+  .icon-btn:hover.edit { border-color:var(--accent); color:var(--accent); background:rgba(232,255,71,0.1); }
+  .icon-btn:hover.delete { border-color:var(--danger); color:var(--danger); background:rgba(255,68,68,0.1); }
   .product-category {
-    display: inline-block;
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    padding: 4px 10px;
-    border-radius: 100px;
-    background: rgba(255,107,53,0.15);
-    color: var(--accent2);
-    border: 1px solid rgba(255,107,53,0.3);
-    margin-bottom: 12px;
+    display:inline-block; font-size:10px; text-transform:uppercase; letter-spacing:1px;
+    padding:4px 10px; border-radius:100px;
+    background:rgba(255,107,53,0.15); color:var(--accent2); border:1px solid rgba(255,107,53,0.3);
+    margin-bottom:12px;
   }
+  .product-desc { font-size:12px; color:var(--muted); line-height:1.7; margin-bottom:16px; }
+  .product-footer { display:flex; align-items:center; justify-content:space-between; padding-top:16px; border-top:1px solid var(--border); }
+  .product-price { font-family:'Syne',sans-serif; font-size:22px; font-weight:800; color:var(--accent); }
+  .product-stock { font-size:11px; color:var(--muted); display:flex; align-items:center; gap:6px; }
+  .stock-dot { width:6px; height:6px; border-radius:50%; }
+  .in-stock { background:var(--success); box-shadow:0 0 6px var(--success); }
+  .low-stock { background:#ffaa00; box-shadow:0 0 6px #ffaa00; }
+  .out-stock { background:var(--danger); box-shadow:0 0 6px var(--danger); }
+  .empty-state { text-align:center; padding:80px 40px; color:var(--muted); grid-column:1/-1; }
+  .empty-icon { font-size:48px; margin-bottom:16px; opacity:0.5; }
+  .empty-title { font-family:'Syne',sans-serif; font-size:20px; font-weight:700; margin-bottom:8px; }
 
-  .product-desc {
-    font-size: 12px;
-    color: var(--muted);
-    line-height: 1.7;
-    margin-bottom: 16px;
-  }
-
-  .product-footer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding-top: 16px;
-    border-top: 1px solid var(--border);
-  }
-
-  .product-price {
-    font-family: 'Syne', sans-serif;
-    font-size: 22px;
-    font-weight: 800;
-    color: var(--accent);
-  }
-
-  .product-stock {
-    font-size: 11px;
-    color: var(--muted);
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  .stock-dot {
-    width: 6px; height: 6px;
-    border-radius: 50%;
-  }
-  .in-stock { background: var(--success); box-shadow: 0 0 6px var(--success); }
-  .low-stock { background: #ffaa00; box-shadow: 0 0 6px #ffaa00; }
-  .out-stock { background: var(--danger); box-shadow: 0 0 6px var(--danger); }
-
-  .empty-state {
-    text-align: center;
-    padding: 80px 40px;
-    color: var(--muted);
-    grid-column: 1/-1;
-  }
-  .empty-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.5; }
-  .empty-title { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; margin-bottom: 8px; }
-
-  /* Modal */
+  /* ── Modal ── */
   .modal-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.8);
-    backdrop-filter: blur(8px);
-    z-index: 200;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.25s;
+    position:fixed; inset:0; background:rgba(0,0,0,0.8); backdrop-filter:blur(8px);
+    z-index:200; display:flex; align-items:center; justify-content:center; padding:20px;
+    opacity:0; pointer-events:none; transition:opacity 0.25s;
   }
-
-  .modal-overlay.open {
-    opacity: 1;
-    pointer-events: all;
-  }
-
+  .modal-overlay.open { opacity:1; pointer-events:all; }
   .modal {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 40px;
-    width: 100%;
-    max-width: 560px;
-    transform: translateY(20px) scale(0.97);
-    transition: transform 0.25s;
-    position: relative;
-    max-height: 90vh;
-    overflow-y: auto;
+    background:var(--surface); border:1px solid var(--border); border-radius:20px;
+    padding:40px; width:100%; max-width:560px;
+    transform:translateY(20px) scale(0.97); transition:transform 0.25s;
+    max-height:90vh; overflow-y:auto;
   }
-
-  .modal-overlay.open .modal {
-    transform: translateY(0) scale(1);
-  }
-
-  .modal-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 32px;
-  }
-
-  .modal-title {
-    font-family: 'Syne', sans-serif;
-    font-size: 24px;
-    font-weight: 800;
-  }
-
+  .modal-overlay.open .modal { transform:translateY(0) scale(1); }
+  .modal-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:32px; }
+  .modal-title { font-family:'Syne',sans-serif; font-size:24px; font-weight:800; }
   .modal-close {
-    width: 36px; height: 36px;
-    border-radius: 8px;
-    border: 1px solid var(--border);
-    background: var(--surface2);
-    color: var(--muted);
-    cursor: pointer;
-    font-size: 18px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s;
+    width:36px; height:36px; border-radius:8px; border:1px solid var(--border);
+    background:var(--surface2); color:var(--muted); cursor:pointer; font-size:18px;
+    display:flex; align-items:center; justify-content:center; transition:all 0.2s;
   }
-  .modal-close:hover { border-color: var(--danger); color: var(--danger); }
-
-  /* Form */
-  .form-group { margin-bottom: 20px; }
-
-  .form-label {
-    display: block;
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    color: var(--muted);
-    margin-bottom: 8px;
-  }
-
+  .modal-close:hover { border-color:var(--danger); color:var(--danger); }
+  .form-group { margin-bottom:20px; }
+  .form-label { display:block; font-size:11px; text-transform:uppercase; letter-spacing:1px; color:var(--muted); margin-bottom:8px; }
   .form-input, .form-textarea, .form-select {
-    width: 100%;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 14px 16px;
-    font-family: 'DM Mono', monospace;
-    font-size: 13px;
-    color: var(--text);
-    outline: none;
-    transition: border-color 0.2s;
+    width:100%; background:var(--surface2); border:1px solid var(--border);
+    border-radius:10px; padding:14px 16px;
+    font-family:'DM Mono',monospace; font-size:13px; color:var(--text);
+    outline:none; transition:border-color 0.2s;
   }
-  .form-input:focus, .form-textarea:focus, .form-select:focus { border-color: var(--accent); }
-  .form-textarea { resize: vertical; min-height: 100px; }
+  .form-input:focus, .form-textarea:focus { border-color:var(--accent); }
+  .form-textarea { resize:vertical; min-height:100px; }
+  .form-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  .form-footer { display:flex; gap:12px; justify-content:flex-end; margin-top:32px; padding-top:24px; border-top:1px solid var(--border); }
 
-  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-
-  .form-footer {
-    display: flex;
-    gap: 12px;
-    justify-content: flex-end;
-    margin-top: 32px;
-    padding-top: 24px;
-    border-top: 1px solid var(--border);
-  }
-
-  /* JSON viewer */
-  .json-panel {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    overflow: hidden;
-    margin-top: 40px;
-  }
-
-  .json-panel-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 16px 24px;
-    border-bottom: 1px solid var(--border);
-    background: var(--surface2);
-  }
-
-  .json-panel-title {
-    font-family: 'Syne', sans-serif;
-    font-size: 14px;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .json-badge {
-    font-size: 10px;
-    padding: 3px 8px;
-    border-radius: 100px;
-    background: rgba(232,255,71,0.15);
-    color: var(--accent);
-    border: 1px solid rgba(232,255,71,0.3);
-  }
-
+  /* ── JSON Panel ── */
+  .json-panel { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; margin-top:40px; }
+  .json-panel-header { display:flex; align-items:center; justify-content:space-between; padding:16px 24px; border-bottom:1px solid var(--border); background:var(--surface2); }
+  .json-panel-title { font-family:'Syne',sans-serif; font-size:14px; font-weight:700; display:flex; align-items:center; gap:10px; }
+  .json-badge { font-size:10px; padding:3px 8px; border-radius:100px; background:rgba(255,152,0,0.15); color:var(--firebase); border:1px solid rgba(255,152,0,0.3); }
+  .live-badge { font-size:10px; padding:3px 8px; border-radius:100px; background:rgba(68,255,170,0.1); color:var(--success); border:1px solid rgba(68,255,170,0.3); display:flex; align-items:center; gap:5px; }
   .json-body {
-    padding: 24px;
-    font-size: 12px;
-    line-height: 1.7;
-    max-height: 320px;
-    overflow-y: auto;
-    white-space: pre;
-    color: #c0c0d8;
+    padding:24px; font-size:12px; line-height:1.7;
+    max-height:320px; overflow-y:auto; white-space:pre; color:#c0c0d8;
   }
+  .json-body .key { color:#79b8ff; }
+  .json-body .string { color:#9be49b; }
+  .json-body .number { color:#f0c36d; }
+  .json-body .bool { color:#ff8c8c; }
 
-  .json-body .key { color: #79b8ff; }
-  .json-body .string { color: #9be49b; }
-  .json-body .number { color: #f0c36d; }
-  .json-body .bool { color: #ff8c8c; }
+  /* ── Live update flash ── */
+  @keyframes flashGreen { 0%{background:rgba(68,255,170,0.12)} 100%{background:var(--surface)} }
+  .product-card.updated { animation: flashGreen 1s ease; }
 
-  /* Toast */
-  .toast-container {
-    position: fixed;
-    bottom: 32px;
-    right: 32px;
-    z-index: 999;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-
+  /* ── Toast ── */
+  .toast-container { position:fixed; bottom:32px; right:32px; z-index:999; display:flex; flex-direction:column; gap:10px; }
   .toast {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 14px 20px;
-    font-size: 13px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    min-width: 280px;
-    animation: slideIn 0.3s ease;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    background:var(--surface); border:1px solid var(--border); border-radius:12px;
+    padding:14px 20px; font-size:13px; display:flex; align-items:center; gap:10px;
+    min-width:280px; animation:slideIn 0.3s ease; box-shadow:0 8px 32px rgba(0,0,0,0.4);
   }
+  .toast.success { border-color:rgba(68,255,170,0.4); }
+  .toast.error { border-color:rgba(255,68,68,0.4); }
+  .toast.info { border-color:rgba(255,152,0,0.4); }
+  @keyframes slideIn { from{opacity:0;transform:translateX(20px)} to{opacity:1;transform:translateX(0)} }
 
-  .toast.success { border-color: rgba(68,255,170,0.4); }
-  .toast.error { border-color: rgba(255,68,68,0.4); }
+  /* ── Confirm ── */
+  .confirm-modal { max-width:400px; text-align:center; }
+  .confirm-icon { font-size:48px; margin-bottom:16px; }
+  .confirm-msg { color:var(--muted); font-size:13px; line-height:1.7; margin-bottom:8px; }
 
-  @keyframes slideIn {
-    from { opacity: 0; transform: translateX(20px); }
-    to { opacity: 1; transform: translateX(0); }
-  }
+  /* ── Spinner ── */
+  .spinner { width:18px; height:18px; border:2px solid rgba(255,255,255,0.2); border-top-color:#fff; border-radius:50%; animation:spin 0.7s linear infinite; }
+  @keyframes spin { to{transform:rotate(360deg)} }
 
-  /* Confirm modal */
-  .confirm-modal {
-    max-width: 400px;
-    text-align: center;
-  }
-
-  .confirm-icon { font-size: 48px; margin-bottom: 16px; }
-  .confirm-msg { color: var(--muted); font-size: 13px; line-height: 1.7; margin-bottom: 8px; }
-
-  /* Responsive */
-  @media (max-width: 768px) {
-    header { padding: 0 20px; }
-    .container { padding: 24px 20px; }
-    .stats-bar { grid-template-columns: repeat(2, 1fr); }
-    .form-row { grid-template-columns: 1fr; }
+  @media(max-width:768px){
+    header{padding:0 20px;}
+    .container{padding:24px 20px;}
+    .stats-bar{grid-template-columns:repeat(2,1fr);}
+    .form-row{grid-template-columns:1fr;}
+    .header-right .btn span{display:none;}
   }
 </style>
 </head>
 <body>
 
-<!-- Header -->
+<!-- ══ SETUP SCREEN ══════════════════════════════════════════════════════════ -->
+<div id="setup-screen">
+  <div class="setup-card">
+    <div class="setup-logo"><span class="fire-icon">🔥</span> ProductAdmin</div>
+    <div class="setup-sub">Connect to Firebase Realtime Database for live sync across all admins.</div>
+
+    <div class="setup-steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-text">Go to <a href="https://firebase.google.com" target="_blank">firebase.google.com</a> → <strong>Get Started</strong> → create a new project</div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-text">In your project: <strong>Build → Realtime Database → Create Database</strong> → choose <strong>Start in test mode</strong></div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-text">Copy your <strong>Database URL</strong> from the top of the Realtime Database page and paste it below</div>
+      </div>
+    </div>
+
+    <div class="setup-input-wrap">
+      <label class="setup-label">Firebase Realtime Database URL</label>
+      <input class="setup-input" id="firebase-url-input" type="text"
+        placeholder="https://your-project-default-rtdb.firebaseio.com">
+    </div>
+    <div class="setup-hint">It looks like: <code>https://my-app-default-rtdb.firebaseio.com</code></div>
+
+    <button class="btn-connect" onclick="connectFirebase()">
+      <span id="connect-spinner" style="display:none"><div class="spinner"></div></span>
+      <span id="connect-text">🔥 Connect & Start</span>
+    </button>
+    <div class="setup-error" id="setup-error"></div>
+
+    <div style="margin-top:24px; padding-top:20px; border-top:1px solid var(--border); text-align:center;">
+      <button class="btn btn-ghost btn-sm" onclick="useDemoMode()" style="width:100%">
+        🧪 Try Demo Mode (local only, no sync)
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ HEADER ════════════════════════════════════════════════════════════════ -->
 <header>
   <div class="logo">
-    <div class="logo-dot"></div>
-    ProductAdmin
+    🔥 ProductAdmin
+    <div class="sync-badge" id="sync-badge">
+      <div class="sync-dot"></div>
+      <span id="sync-label">Connecting…</span>
+    </div>
   </div>
-  <div class="header-actions">
-    <button class="btn btn-ghost" onclick="importJSON()">⬆ Import JSON</button>
-    <button class="btn btn-ghost btn-success" onclick="exportJSON()">⬇ Export JSON</button>
-    <button class="btn btn-primary" onclick="openModal()">+ Add Product</button>
+  <div class="header-right">
+    <button class="btn btn-ghost btn-sm" onclick="showSettings()" title="Change Firebase URL">⚙ DB</button>
+    <button class="btn btn-ghost" onclick="exportJSON()">⬇ <span>Export JSON</span></button>
+    <button class="btn btn-primary" onclick="openModal()">+ <span>Add Product</span></button>
   </div>
 </header>
 
-<!-- Main -->
+<!-- ══ MAIN ══════════════════════════════════════════════════════════════════ -->
 <div class="container">
 
-  <!-- Stats -->
   <div class="stats-bar">
     <div class="stat-card">
       <div class="stat-label">Total Products</div>
@@ -587,11 +381,10 @@
     </div>
   </div>
 
-  <!-- Toolbar -->
   <div class="toolbar">
     <div class="search-wrap">
       <span class="search-icon">⌕</span>
-      <input type="text" id="search-input" placeholder="Search products..." oninput="renderProducts()">
+      <input type="text" id="search-input" placeholder="Search products…" oninput="renderProducts()">
     </div>
     <select class="filter-select" id="cat-filter" onchange="renderProducts()">
       <option value="">All Categories</option>
@@ -604,39 +397,46 @@
     </select>
   </div>
 
-  <!-- Products Grid -->
-  <div class="products-grid" id="products-grid"></div>
+  <div class="products-grid" id="products-grid">
+    <div class="empty-state">
+      <div class="empty-icon">🔥</div>
+      <div class="empty-title">Connecting to Firebase…</div>
+      <div style="font-size:13px">Products will appear here once connected.</div>
+    </div>
+  </div>
 
-  <!-- JSON Panel -->
+  <!-- JSON Live View -->
   <div class="json-panel">
     <div class="json-panel-header">
       <div class="json-panel-title">
-        📄 JSON Data Store
-        <span class="json-badge">products.json</span>
+        📄 Live JSON Data
+        <span class="json-badge">Firebase</span>
+        <span class="live-badge" id="live-badge">
+          <span style="width:6px;height:6px;border-radius:50%;background:var(--success);display:inline-block;"></span>
+          Live
+        </span>
       </div>
       <div style="display:flex;gap:8px;">
         <button class="btn btn-ghost btn-sm" onclick="copyJSON()">Copy JSON</button>
-        <button class="btn btn-ghost btn-sm" onclick="toggleJSON()">Toggle View</button>
+        <button class="btn btn-ghost btn-sm" onclick="toggleJSON()">Toggle</button>
       </div>
     </div>
-    <div class="json-body" id="json-view"></div>
+    <div class="json-body" id="json-view">Waiting for data…</div>
   </div>
 
 </div>
 
-<!-- Add/Edit Modal -->
+<!-- ══ ADD/EDIT MODAL ════════════════════════════════════════════════════════ -->
 <div class="modal-overlay" id="product-modal">
   <div class="modal">
     <div class="modal-header">
       <div class="modal-title" id="modal-title">Add Product</div>
       <button class="modal-close" onclick="closeModal()">✕</button>
     </div>
-
     <div class="form-group">
       <label class="form-label">Product Name *</label>
       <input type="text" class="form-input" id="f-name" placeholder="e.g. Wireless Headphones">
     </div>
-
     <div class="form-row">
       <div class="form-group">
         <label class="form-label">Price (USD) *</label>
@@ -647,18 +447,15 @@
         <input type="number" class="form-input" id="f-stock" placeholder="0" min="0">
       </div>
     </div>
-
     <div class="form-group">
       <label class="form-label">Category *</label>
-      <input type="text" class="form-input" id="f-category" placeholder="e.g. Electronics, Clothing..." list="cat-list">
+      <input type="text" class="form-input" id="f-category" placeholder="e.g. Electronics, Clothing…" list="cat-list">
       <datalist id="cat-list"></datalist>
     </div>
-
     <div class="form-group">
       <label class="form-label">Description</label>
-      <textarea class="form-textarea" id="f-desc" placeholder="Product description..."></textarea>
+      <textarea class="form-textarea" id="f-desc" placeholder="Product description…"></textarea>
     </div>
-
     <div class="form-row">
       <div class="form-group">
         <label class="form-label">SKU</label>
@@ -666,18 +463,20 @@
       </div>
       <div class="form-group">
         <label class="form-label">Image URL</label>
-        <input type="text" class="form-input" id="f-image" placeholder="https://...">
+        <input type="text" class="form-input" id="f-image" placeholder="https://…">
       </div>
     </div>
-
     <div class="form-footer">
       <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="saveProduct()">Save Product</button>
+      <button class="btn btn-primary" id="save-btn" onclick="saveProduct()">
+        <span id="save-spinner" style="display:none"><div class="spinner" style="border-top-color:#0a0a0f;border-color:rgba(0,0,0,0.2);border-top-color:#0a0a0f;"></div></span>
+        Save Product
+      </button>
     </div>
   </div>
 </div>
 
-<!-- Confirm Delete Modal -->
+<!-- ══ CONFIRM DELETE ════════════════════════════════════════════════════════ -->
 <div class="modal-overlay" id="confirm-modal">
   <div class="modal confirm-modal">
     <div class="confirm-icon">🗑</div>
@@ -690,45 +489,173 @@
   </div>
 </div>
 
-<!-- Toast Container -->
+<!-- ══ SETTINGS MODAL ════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="settings-modal">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-header">
+      <div class="modal-title">⚙ Database Settings</div>
+      <button class="modal-close" onclick="document.getElementById('settings-modal').classList.remove('open')">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Firebase Database URL</label>
+      <input type="text" class="form-input" id="settings-url" placeholder="https://…">
+    </div>
+    <div class="form-footer">
+      <button class="btn btn-ghost" onclick="document.getElementById('settings-modal').classList.remove('open')">Cancel</button>
+      <button class="btn btn-primary" onclick="updateFirebaseURL()">Reconnect</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast-container" id="toasts"></div>
 
-<!-- Hidden file input for import -->
-<input type="file" id="json-import" accept=".json" style="display:none" onchange="handleImport(event)">
-
 <script>
-const STORAGE_KEY = 'productadmin_data';
-let products = [];
-let editingId = null;
+// ══ State ══════════════════════════════════════════════════════════════════
+let products = {};          // keyed by Firebase key
+let firebaseURL = '';
+let demoMode = false;
+let editingKey = null;
 let jsonVisible = true;
+let unsubscribe = null;
 
-// ── Init ─────────────────────────────────────────────────────────────────────
-function init() {
-  const raw = localStorage.getItem(STORAGE_KEY);
-  if (raw) {
-    try { products = JSON.parse(raw); } catch { products = []; }
-  } else {
-    // Demo seed data
-    products = [
-      { id: 'PRD-001', name: 'Wireless Noise-Cancelling Headphones', price: 299.99, stock: 45, category: 'Electronics', description: 'Premium over-ear headphones with 30hr battery life and adaptive ANC.', sku: 'ELC-HP-001', image: '', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-      { id: 'PRD-002', name: 'Ergonomic Desk Chair', price: 549.00, stock: 8, category: 'Furniture', description: 'Lumbar-support mesh chair with adjustable armrests and 5-year warranty.', sku: 'FRN-CH-002', image: '', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-      { id: 'PRD-003', name: 'Organic Green Tea Set', price: 34.50, stock: 0, category: 'Food & Beverage', description: 'Hand-picked ceremonial-grade matcha from Uji, Japan. 100g tin.', sku: 'FOD-TE-003', image: '', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-      { id: 'PRD-004', name: 'Mechanical Keyboard TKL', price: 149.99, stock: 22, category: 'Electronics', description: 'Tenkeyless layout with Cherry MX switches, per-key RGB, PBT keycaps.', sku: 'ELC-KB-004', image: '', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-    ];
-    save();
+const FB_URL_KEY = 'productadmin_firebase_url';
+
+// ══ Firebase REST helpers ══════════════════════════════════════════════════
+// We use Firebase REST API + SSE for real-time — no SDK needed!
+
+async function fbGet(path) {
+  const r = await fetch(`${firebaseURL}/${path}.json`);
+  if (!r.ok) throw new Error(`Firebase GET failed: ${r.status}`);
+  return r.json();
+}
+
+async function fbSet(path, data) {
+  const r = await fetch(`${firebaseURL}/${path}.json`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  });
+  if (!r.ok) throw new Error(`Firebase SET failed: ${r.status}`);
+  return r.json();
+}
+
+async function fbPush(path, data) {
+  const r = await fetch(`${firebaseURL}/${path}.json`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  });
+  if (!r.ok) throw new Error(`Firebase PUSH failed: ${r.status}`);
+  return r.json();
+}
+
+async function fbDelete(path) {
+  const r = await fetch(`${firebaseURL}/${path}.json`, { method: 'DELETE' });
+  if (!r.ok) throw new Error(`Firebase DELETE failed: ${r.status}`);
+  return r.json();
+}
+
+// ══ Real-time listener via SSE ═════════════════════════════════════════════
+function startListen() {
+  if (unsubscribe) unsubscribe();
+
+  const es = new EventSource(`${firebaseURL}/products.json`);
+
+  es.addEventListener('put', e => {
+    const msg = JSON.parse(e.data);
+    if (msg.path === '/') {
+      products = msg.data || {};
+    } else {
+      // partial update
+      const key = msg.path.replace('/', '');
+      if (msg.data === null) delete products[key];
+      else products[key] = msg.data;
+    }
+    render();
+    setSyncStatus('live');
+  });
+
+  es.addEventListener('patch', e => {
+    const msg = JSON.parse(e.data);
+    Object.assign(products, msg.data || {});
+    render();
+    setSyncStatus('live');
+  });
+
+  es.onerror = () => {
+    setSyncStatus('error');
+  };
+
+  unsubscribe = () => es.close();
+}
+
+// ══ Connection ════════════════════════════════════════════════════════════
+async function connectFirebase() {
+  const url = document.getElementById('firebase-url-input').value.trim().replace(/\/$/, '');
+  if (!url.startsWith('https://')) {
+    showSetupError('Please enter a valid Firebase URL starting with https://');
+    return;
   }
-  render();
+
+  document.getElementById('connect-spinner').style.display = '';
+  document.getElementById('connect-text').textContent = 'Connecting…';
+
+  try {
+    // Test connection
+    const res = await fetch(`${url}/products.json?shallow=true`);
+    if (!res.ok) throw new Error('Cannot reach database. Check the URL and make sure test mode is enabled.');
+
+    firebaseURL = url;
+    localStorage.setItem(FB_URL_KEY, url);
+    launchApp();
+  } catch (err) {
+    document.getElementById('connect-spinner').style.display = 'none';
+    document.getElementById('connect-text').textContent = '🔥 Connect & Start';
+    showSetupError(err.message || 'Connection failed. Check your URL.');
+  }
 }
 
-// ── Persistence ───────────────────────────────────────────────────────────────
-function save() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(products, null, 2));
-  updateJSON();
-  updateStats();
-  updateCategoryFilter();
+function showSetupError(msg) {
+  const el = document.getElementById('setup-error');
+  el.textContent = '⚠ ' + msg;
+  el.style.display = 'block';
 }
 
-// ── Render ────────────────────────────────────────────────────────────────────
+function useDemoMode() {
+  demoMode = true;
+  products = {
+    'demo1': { id:'demo1', name:'Wireless Headphones', price:299.99, stock:45, category:'Electronics', description:'Premium over-ear headphones with ANC.', sku:'ELC-HP-001', image:'', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
+    'demo2': { id:'demo2', name:'Ergonomic Desk Chair', price:549.00, stock:8, category:'Furniture', description:'Lumbar-support mesh chair.', sku:'FRN-CH-002', image:'', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
+    'demo3': { id:'demo3', name:'Organic Green Tea Set', price:34.50, stock:0, category:'Food & Beverage', description:'Ceremonial matcha from Uji, Japan.', sku:'FOD-TE-003', image:'', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() },
+  };
+  launchApp(true);
+}
+
+function launchApp(demo) {
+  document.getElementById('setup-screen').style.display = 'none';
+  if (demo) {
+    setSyncStatus('demo');
+    render();
+    toast('Running in demo mode — changes are local only', 'info');
+  } else {
+    setSyncStatus('connecting');
+    startListen();
+    toast('Connected to Firebase! Real-time sync active 🔥', 'success');
+  }
+}
+
+// ══ Sync Status ═══════════════════════════════════════════════════════════
+function setSyncStatus(state) {
+  const badge = document.getElementById('sync-badge');
+  const label = document.getElementById('sync-label');
+  badge.className = 'sync-badge';
+  if (state === 'live') { badge.classList.add('live'); label.textContent = 'Live Sync'; }
+  else if (state === 'error') { badge.classList.add('error'); label.textContent = 'Disconnected'; }
+  else if (state === 'demo') { label.textContent = 'Demo Mode'; }
+  else { label.textContent = 'Connecting…'; }
+}
+
+// ══ Render ════════════════════════════════════════════════════════════════
 function render() {
   renderProducts();
   updateJSON();
@@ -741,90 +668,79 @@ function renderProducts() {
   const catFilter = document.getElementById('cat-filter').value;
   const stockFilter = document.getElementById('stock-filter').value;
 
-  let filtered = products.filter(p => {
-    const matchSearch = !search || p.name.toLowerCase().includes(search) || p.category.toLowerCase().includes(search) || p.sku.toLowerCase().includes(search);
+  let arr = Object.entries(products).map(([k, v]) => ({ ...v, _key: k }));
+
+  arr = arr.filter(p => {
+    const matchSearch = !search || (p.name||'').toLowerCase().includes(search) || (p.category||'').toLowerCase().includes(search) || (p.sku||'').toLowerCase().includes(search);
     const matchCat = !catFilter || p.category === catFilter;
-    const matchStock = !stockFilter || (
-      stockFilter === 'in' && p.stock > 10 ||
-      stockFilter === 'low' && p.stock > 0 && p.stock <= 10 ||
-      stockFilter === 'out' && p.stock === 0
-    );
+    const s = Number(p.stock);
+    const matchStock = !stockFilter || (stockFilter==='in' && s>10) || (stockFilter==='low' && s>0 && s<=10) || (stockFilter==='out' && s===0);
     return matchSearch && matchCat && matchStock;
   });
 
   const grid = document.getElementById('products-grid');
-
-  if (!filtered.length) {
-    grid.innerHTML = `<div class="empty-state"><div class="empty-icon">📦</div><div class="empty-title">No products found</div><div style="font-size:13px">Try adjusting your search or filters.</div></div>`;
+  if (!arr.length) {
+    grid.innerHTML = `<div class="empty-state"><div class="empty-icon">📦</div><div class="empty-title">No products found</div><div style="font-size:13px">Add your first product or adjust filters.</div></div>`;
     return;
   }
 
-  grid.innerHTML = filtered.map(p => {
-    const stockClass = p.stock === 0 ? 'out-stock' : p.stock <= 10 ? 'low-stock' : 'in-stock';
-    const stockLabel = p.stock === 0 ? 'Out of stock' : p.stock <= 10 ? `Low (${p.stock})` : `In stock (${p.stock})`;
+  grid.innerHTML = arr.map(p => {
+    const s = Number(p.stock);
+    const stockClass = s===0 ? 'out-stock' : s<=10 ? 'low-stock' : 'in-stock';
+    const stockLabel = s===0 ? 'Out of stock' : s<=10 ? `Low (${s})` : `In stock (${s})`;
     return `
-    <div class="product-card">
+    <div class="product-card" id="card-${p._key}">
       <div class="product-card-header">
         <div>
-          <div class="product-id">${p.id} · ${p.sku}</div>
-          <div class="product-name">${escHtml(p.name)}</div>
+          <div class="product-id">${esc(p.sku||p._key)}</div>
+          <div class="product-name">${esc(p.name)}</div>
         </div>
         <div class="product-actions">
-          <button class="icon-btn edit" onclick="openModal('${p.id}')" title="Edit">✏</button>
-          <button class="icon-btn delete" onclick="confirmDelete('${p.id}')" title="Delete">🗑</button>
+          <button class="icon-btn edit" onclick="openModal('${p._key}')" title="Edit">✏</button>
+          <button class="icon-btn delete" onclick="confirmDelete('${p._key}')" title="Delete">🗑</button>
         </div>
       </div>
-      <span class="product-category">${escHtml(p.category)}</span>
-      <div class="product-desc">${escHtml(p.description || '—')}</div>
+      <span class="product-category">${esc(p.category||'—')}</span>
+      <div class="product-desc">${esc(p.description||'—')}</div>
       <div class="product-footer">
         <div class="product-price">$${Number(p.price).toFixed(2)}</div>
-        <div class="product-stock">
-          <span class="stock-dot ${stockClass}"></span>
-          ${stockLabel}
-        </div>
+        <div class="product-stock"><span class="stock-dot ${stockClass}"></span>${stockLabel}</div>
       </div>
     </div>`;
   }).join('');
 }
 
 function updateStats() {
-  const total = products.length;
-  const cats = new Set(products.map(p => p.category)).size;
-  const value = products.reduce((s, p) => s + p.price * p.stock, 0);
-  const low = products.filter(p => p.stock > 0 && p.stock <= 10).length;
-
-  document.getElementById('stat-total').textContent = total;
-  document.getElementById('stat-cats').textContent = cats;
-  document.getElementById('stat-value').textContent = '$' + formatNum(value);
-  document.getElementById('stat-low').textContent = low;
+  const arr = Object.values(products);
+  document.getElementById('stat-total').textContent = arr.length;
+  document.getElementById('stat-cats').textContent = new Set(arr.map(p=>p.category)).size;
+  const val = arr.reduce((s,p) => s + Number(p.price) * Number(p.stock), 0);
+  document.getElementById('stat-value').textContent = '$' + (val>=1000 ? (val/1000).toFixed(1)+'k' : val.toFixed(0));
+  document.getElementById('stat-low').textContent = arr.filter(p=>Number(p.stock)>0&&Number(p.stock)<=10).length;
 }
 
 function updateCategoryFilter() {
-  const cats = [...new Set(products.map(p => p.category))].sort();
-  const select = document.getElementById('cat-filter');
-  const current = select.value;
-  select.innerHTML = '<option value="">All Categories</option>' + cats.map(c => `<option value="${escHtml(c)}" ${c === current ? 'selected' : ''}>${escHtml(c)}</option>`).join('');
-
-  // datalist
-  const dl = document.getElementById('cat-list');
-  dl.innerHTML = cats.map(c => `<option value="${escHtml(c)}">`).join('');
+  const cats = [...new Set(Object.values(products).map(p=>p.category))].filter(Boolean).sort();
+  const sel = document.getElementById('cat-filter');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">All Categories</option>' + cats.map(c=>`<option value="${esc(c)}"${c===cur?' selected':''}>${esc(c)}</option>`).join('');
+  document.getElementById('cat-list').innerHTML = cats.map(c=>`<option value="${esc(c)}">`).join('');
 }
 
-// ── JSON View ─────────────────────────────────────────────────────────────────
+// ══ JSON View ══════════════════════════════════════════════════════════════
 function updateJSON() {
   if (!jsonVisible) return;
-  const json = JSON.stringify({ products, lastUpdated: new Date().toISOString(), count: products.length }, null, 2);
-  document.getElementById('json-view').innerHTML = syntaxHighlight(json);
+  const data = { products: Object.values(products), count: Object.keys(products).length, lastUpdated: new Date().toISOString() };
+  document.getElementById('json-view').innerHTML = syntaxHighlight(JSON.stringify(data, null, 2));
 }
 
 function syntaxHighlight(json) {
-  return json
-    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-    .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, match => {
+  return json.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, m => {
       let cls = 'number';
-      if (/^"/.test(match)) cls = /:$/.test(match) ? 'key' : 'string';
-      else if (/true|false/.test(match)) cls = 'bool';
-      return `<span class="${cls}">${match}</span>`;
+      if (/^"/.test(m)) cls = /:$/.test(m) ? 'key' : 'string';
+      else if (/true|false/.test(m)) cls = 'bool';
+      return `<span class="${cls}">${m}</span>`;
     });
 }
 
@@ -836,165 +752,148 @@ function toggleJSON() {
 }
 
 function copyJSON() {
-  const json = JSON.stringify({ products, lastUpdated: new Date().toISOString(), count: products.length }, null, 2);
-  navigator.clipboard.writeText(json).then(() => toast('JSON copied to clipboard!', 'success'));
+  const data = { products: Object.values(products), count: Object.keys(products).length, lastUpdated: new Date().toISOString() };
+  navigator.clipboard.writeText(JSON.stringify(data, null, 2)).then(() => toast('JSON copied!', 'success'));
 }
 
-// ── Modal ─────────────────────────────────────────────────────────────────────
-function openModal(id) {
-  editingId = id || null;
-  const modal = document.getElementById('product-modal');
-  const title = document.getElementById('modal-title');
+function exportJSON() {
+  const data = { products: Object.values(products), count: Object.keys(products).length, lastUpdated: new Date().toISOString() };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'products.json'; a.click();
+  toast('products.json exported!', 'success');
+}
 
-  if (id) {
-    const p = products.find(x => x.id === id);
-    if (!p) return;
-    title.textContent = 'Edit Product';
-    document.getElementById('f-name').value = p.name;
-    document.getElementById('f-price').value = p.price;
-    document.getElementById('f-stock').value = p.stock;
-    document.getElementById('f-category').value = p.category;
-    document.getElementById('f-desc').value = p.description || '';
-    document.getElementById('f-sku').value = p.sku || '';
-    document.getElementById('f-image').value = p.image || '';
-  } else {
-    title.textContent = 'Add Product';
-    ['f-name','f-price','f-stock','f-category','f-desc','f-sku','f-image'].forEach(id => document.getElementById(id).value = '');
-  }
-
-  modal.classList.add('open');
+// ══ Modal ══════════════════════════════════════════════════════════════════
+function openModal(key) {
+  editingKey = key || null;
+  const p = key ? products[key] : null;
+  document.getElementById('modal-title').textContent = p ? 'Edit Product' : 'Add Product';
+  document.getElementById('f-name').value = p?.name || '';
+  document.getElementById('f-price').value = p?.price || '';
+  document.getElementById('f-stock').value = p?.stock ?? '';
+  document.getElementById('f-category').value = p?.category || '';
+  document.getElementById('f-desc').value = p?.description || '';
+  document.getElementById('f-sku').value = p?.sku || '';
+  document.getElementById('f-image').value = p?.image || '';
+  document.getElementById('product-modal').classList.add('open');
 }
 
 function closeModal() { document.getElementById('product-modal').classList.remove('open'); }
 
-function saveProduct() {
+async function saveProduct() {
   const name = document.getElementById('f-name').value.trim();
   const price = parseFloat(document.getElementById('f-price').value);
   const stock = parseInt(document.getElementById('f-stock').value);
   const category = document.getElementById('f-category').value.trim();
+  if (!name || isNaN(price) || isNaN(stock) || !category) { toast('Fill all required fields.', 'error'); return; }
 
-  if (!name || isNaN(price) || isNaN(stock) || !category) {
-    toast('Please fill all required fields.', 'error');
-    return;
-  }
-
-  const sku = document.getElementById('f-sku').value.trim() || genSKU(category);
-  const desc = document.getElementById('f-desc').value.trim();
-  const image = document.getElementById('f-image').value.trim();
+  const sku = document.getElementById('f-sku').value.trim() || (category.substring(0,3).toUpperCase() + '-' + Math.random().toString(36).substring(2,7).toUpperCase());
   const now = new Date().toISOString();
+  const data = { name, price, stock, category, description: document.getElementById('f-desc').value.trim(), sku, image: document.getElementById('f-image').value.trim(), updatedAt: now };
 
-  if (editingId) {
-    const idx = products.findIndex(p => p.id === editingId);
-    products[idx] = { ...products[idx], name, price, stock, category, description: desc, sku, image, updatedAt: now };
-    toast('Product updated successfully!', 'success');
-  } else {
-    const id = 'PRD-' + String(products.length + 1).padStart(3, '0');
-    products.push({ id, name, price, stock, category, description: desc, sku, image, createdAt: now, updatedAt: now });
-    toast('Product added successfully!', 'success');
+  document.getElementById('save-spinner').style.display = '';
+  document.getElementById('save-btn').disabled = true;
+
+  try {
+    if (demoMode) {
+      const k = editingKey || ('demo_' + Date.now());
+      products[k] = { ...data, id: k, createdAt: products[k]?.createdAt || now };
+      render();
+      toast(editingKey ? 'Product updated!' : 'Product added!', 'success');
+    } else {
+      if (editingKey) {
+        const existing = products[editingKey] || {};
+        await fbSet(`products/${editingKey}`, { ...existing, ...data });
+        toast('Product updated & synced 🔥', 'success');
+      } else {
+        data.createdAt = now;
+        await fbPush('products', data);
+        toast('Product added & synced 🔥', 'success');
+      }
+    }
+    closeModal();
+  } catch (err) {
+    toast('Save failed: ' + err.message, 'error');
+  } finally {
+    document.getElementById('save-spinner').style.display = 'none';
+    document.getElementById('save-btn').disabled = false;
   }
-
-  save();
-  renderProducts();
-  closeModal();
 }
 
-// ── Delete ────────────────────────────────────────────────────────────────────
-let deleteTarget = null;
+// ══ Delete ════════════════════════════════════════════════════════════════
+let deleteKey = null;
 
-function confirmDelete(id) {
-  const p = products.find(x => x.id === id);
+function confirmDelete(key) {
+  const p = products[key];
   if (!p) return;
-  deleteTarget = id;
-  document.getElementById('confirm-msg').textContent = `"${p.name}" will be permanently removed from the inventory.`;
+  deleteKey = key;
+  document.getElementById('confirm-msg').textContent = `"${p.name}" will be permanently removed from the database.`;
   document.getElementById('confirm-ok-btn').onclick = doDelete;
   document.getElementById('confirm-modal').classList.add('open');
 }
 
-function doDelete() {
-  products = products.filter(p => p.id !== deleteTarget);
-  save();
-  renderProducts();
-  closeConfirm();
-  toast('Product deleted.', 'success');
+async function doDelete() {
+  try {
+    if (demoMode) {
+      delete products[deleteKey];
+      render();
+    } else {
+      await fbDelete(`products/${deleteKey}`);
+    }
+    toast('Product deleted & synced 🔥', 'success');
+    closeConfirm();
+  } catch (err) {
+    toast('Delete failed: ' + err.message, 'error');
+  }
 }
 
 function closeConfirm() { document.getElementById('confirm-modal').classList.remove('open'); }
 
-// ── Import / Export ───────────────────────────────────────────────────────────
-function exportJSON() {
-  const data = { products, lastUpdated: new Date().toISOString(), count: products.length };
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'products.json';
-  a.click();
-  URL.revokeObjectURL(url);
-  toast('products.json exported!', 'success');
+// ══ Settings ══════════════════════════════════════════════════════════════
+function showSettings() {
+  document.getElementById('settings-url').value = firebaseURL;
+  document.getElementById('settings-modal').classList.add('open');
 }
 
-function importJSON() { document.getElementById('json-import').click(); }
-
-function handleImport(e) {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = ev => {
-    try {
-      const data = JSON.parse(ev.target.result);
-      const arr = data.products || (Array.isArray(data) ? data : null);
-      if (!arr) throw new Error();
-      products = arr;
-      save();
-      render();
-      toast(`Imported ${arr.length} products from ${file.name}`, 'success');
-    } catch {
-      toast('Invalid JSON file format.', 'error');
-    }
-    e.target.value = '';
-  };
-  reader.readAsText(file);
+function updateFirebaseURL() {
+  const url = document.getElementById('settings-url').value.trim().replace(/\/$/, '');
+  if (!url.startsWith('https://')) { toast('Invalid URL', 'error'); return; }
+  if (unsubscribe) unsubscribe();
+  firebaseURL = url;
+  localStorage.setItem(FB_URL_KEY, url);
+  demoMode = false;
+  setSyncStatus('connecting');
+  startListen();
+  document.getElementById('settings-modal').classList.remove('open');
+  toast('Reconnecting to new database…', 'info');
 }
 
-// ── Toast ─────────────────────────────────────────────────────────────────────
-function toast(msg, type = 'success') {
+// ══ Toast ═════════════════════════════════════════════════════════════════
+function toast(msg, type='success') {
   const el = document.createElement('div');
   el.className = `toast ${type}`;
-  el.innerHTML = `<span>${type === 'success' ? '✓' : '⚠'}</span> ${msg}`;
+  el.innerHTML = `<span>${type==='success'?'✓':type==='error'?'⚠':'ℹ'}</span> ${msg}`;
   document.getElementById('toasts').appendChild(el);
-  setTimeout(() => el.remove(), 3500);
+  setTimeout(() => el.remove(), 4000);
 }
 
-// ── Utils ─────────────────────────────────────────────────────────────────────
-function escHtml(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
+// ══ Utils ═════════════════════════════════════════════════════════════════
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
-function genSKU(category) {
-  const prefix = category.substring(0, 3).toUpperCase();
-  return prefix + '-' + Math.random().toString(36).substring(2,7).toUpperCase();
-}
-
-function formatNum(n) {
-  if (n >= 1000) return (n / 1000).toFixed(1) + 'k';
-  return n.toFixed(0);
-}
-
-// ── Keyboard ──────────────────────────────────────────────────────────────────
+// ══ Keyboard ══════════════════════════════════════════════════════════════
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') { closeModal(); closeConfirm(); }
+  if (e.key === 'Escape') { closeModal(); closeConfirm(); document.getElementById('settings-modal').classList.remove('open'); }
+});
+['product-modal','confirm-modal','settings-modal'].forEach(id => {
+  document.getElementById(id).addEventListener('click', e => { if (e.target.id === id) { closeModal(); closeConfirm(); document.getElementById('settings-modal').classList.remove('open'); } });
 });
 
-document.getElementById('product-modal').addEventListener('click', e => {
-  if (e.target === document.getElementById('product-modal')) closeModal();
-});
-
-document.getElementById('confirm-modal').addEventListener('click', e => {
-  if (e.target === document.getElementById('confirm-modal')) closeConfirm();
-});
-
-// ── Boot ──────────────────────────────────────────────────────────────────────
-init();
+// ══ Boot ══════════════════════════════════════════════════════════════════
+// Firebase URL is hardcoded — setup screen is skipped automatically
+const HARDCODED_URL = 'https://admindashbord-a948d-default-rtdb.europe-west1.firebasedatabase.app';
+firebaseURL = HARDCODED_URL;
+localStorage.setItem(FB_URL_KEY, HARDCODED_URL);
+launchApp();
 </script>
 </body>
 </html>
