@@ -555,38 +555,67 @@ async function fbDelete(path) {
   return r.json();
 }
 
-// ══ Real-time listener via SSE ═════════════════════════════════════════════
+// ══ Real-time listener — SSE with polling fallback ═══════════════════════
+let pollInterval = null;
+let lastEtag = null;
+
 function startListen() {
   if (unsubscribe) unsubscribe();
+  trySSE();
+}
 
-  const es = new EventSource(`${firebaseURL}/products.json`);
+function trySSE() {
+  let sseOk = false;
+  let es;
+  try {
+    es = new EventSource(firebaseURL + '/products.json');
+    es.addEventListener('put', function(e) {
+      try {
+        sseOk = true;
+        const msg = JSON.parse(e.data);
+        if (msg.path === '/') { products = msg.data || {}; }
+        else { const key = msg.path.replace(/^\//, ''); if (msg.data === null) delete products[key]; else products[key] = msg.data; }
+        render(); setSyncStatus('live');
+      } catch(err) {}
+    });
+    es.addEventListener('patch', function(e) {
+      try { const msg = JSON.parse(e.data); Object.assign(products, msg.data || {}); render(); setSyncStatus('live'); } catch(err) {}
+    });
+    es.onerror = function() {
+      es.close();
+      if (!sseOk) { startPolling(); }
+      else { setSyncStatus('error'); setTimeout(trySSE, 5000); }
+    };
+    setTimeout(function() { if (!sseOk) { es.close(); startPolling(); } }, 4000);
+  } catch(err) { startPolling(); }
+  unsubscribe = function() { if (es) es.close(); if (pollInterval) clearInterval(pollInterval); };
+}
 
-  es.addEventListener('put', e => {
-    const msg = JSON.parse(e.data);
-    if (msg.path === '/') {
-      products = msg.data || {};
-    } else {
-      // partial update
-      const key = msg.path.replace('/', '');
-      if (msg.data === null) delete products[key];
-      else products[key] = msg.data;
+function startPolling() {
+  console.log('Using polling mode (3s interval)');
+  pollOnce();
+  pollInterval = setInterval(pollOnce, 3000);
+  unsubscribe = function() { if (pollInterval) clearInterval(pollInterval); };
+}
+
+async function pollOnce() {
+  try {
+    const r = await fetch(firebaseURL + '/products.json');
+    if (r.status === 401 || r.status === 403) {
+      setSyncStatus('error');
+      if (pollInterval) clearInterval(pollInterval);
+      toast('Firebase rules are blocking access! Go to Firebase console → Realtime Database → Rules → set .read and .write to true → Publish', 'error');
+      return;
     }
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const data = await r.json();
+    products = data || {};
     render();
     setSyncStatus('live');
-  });
-
-  es.addEventListener('patch', e => {
-    const msg = JSON.parse(e.data);
-    Object.assign(products, msg.data || {});
-    render();
-    setSyncStatus('live');
-  });
-
-  es.onerror = () => {
+  } catch(err) {
+    console.warn('Poll error:', err.message);
     setSyncStatus('error');
-  };
-
-  unsubscribe = () => es.close();
+  }
 }
 
 // ══ Connection ════════════════════════════════════════════════════════════
